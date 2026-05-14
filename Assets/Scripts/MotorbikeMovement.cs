@@ -9,17 +9,14 @@ public class MotorbikeMovement : MonoBehaviour
     Rigidbody2D playerRb;
 
     public float wheelRotationForce;
-    public float maxSpeed; //per simulation step
-
-    float frontOldRotate;
-    float backOldRotate;
+    public float maxVelocity; //per simulation step
 
     Vector2 oldPosition;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        playerRb = GetComponent<Rigidbody2D>();   
+        playerRb = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
@@ -42,11 +39,13 @@ public class MotorbikeMovement : MonoBehaviour
 
     void Drive(float speed)
     {
-        speed = LimitSpeed(speed);
 
         //speed *= Time.deltaTime;
+
         frontWheelRb.AddTorque(speed, ForceMode2D.Impulse);
         backWheelRb.AddTorque(speed, ForceMode2D.Impulse);
+
+        LimitSpeed();
 
 
 
@@ -57,35 +56,56 @@ public class MotorbikeMovement : MonoBehaviour
         //playerRb.AddForce()
     }
 
-    float LimitSpeed(float speed)
+    void LimitSpeed()
     {
-        //float frontRotateDelta = frontWheelRb.rotation - frontOldRotate;
-        //float backRotateDelta = backWheelRb.rotation - backOldRotate;
-        //float averageDelta = (frontRotateDelta + backRotateDelta) / 2; // a bit silly
+        Debug.Log(GroundCheck());
+        if(GroundCheck())
+        {
+            if(playerRb.linearVelocity.magnitude > maxVelocity)
+            {
+                playerRb.linearVelocity = playerRb.linearVelocity.normalized * maxVelocity;
+            }
+        }
 
-        float positionDelta = playerRb.position.x - oldPosition.x;
-        Debug.Log(positionDelta);   
+
+        /*
+        float angle = Vector2.Angle(playerRb.linearVelocity, transform.forward);
+        //Debug.Log(angle);
+
 
         //frontOldRotate = frontWheelRb.rotation;
         //backOldRotate = backWheelRb.rotation;
         oldPosition = playerRb.position;
 
-        if (positionDelta > maxSpeed) // if going too fast in positive direction
+        if(angle > -90 && angle < 90) //going forward
         {
-            if(speed > 0)
+            if (positionDelta.magnitude > maxSpeed) // if going too fast in positive direction
             {
-                return 0;
+                if (speed > 0)
+                {
+                    return 0;
+                }
             }
         }
 
-        if(positionDelta < -maxSpeed) // if going too fast in negative direction
+        if(angle > 90 || angle < -90)
         {
-            if(speed < 0)
+            if (positionDelta.magnitude > maxSpeed) // if going too fast in negative direction
             {
-                return 0;
+                if (speed < 0)
+                {
+                    return 0;
+                }
             }
         }
         
         return speed;
+        */
+    }
+
+    bool GroundCheck()
+    {
+        Vector2 downVector = transform.up * -1;
+        return Physics2D.Raycast(transform.position, downVector, 5f, LayerMask.GetMask("Ground"));
     }
 }
